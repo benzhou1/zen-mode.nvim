@@ -93,9 +93,16 @@ function M.round(num)
   return math.floor(num + 0.5)
 end
 
-function M.height()
+function M.height(opts)
   local height = vim.o.lines - vim.o.cmdheight
-  return (vim.o.laststatus == 3) and height - 1 or height
+	local height_offset = 0
+	if opts.plugins.tabline and opts.plugins.tabline.enabled then
+		height_offset = height_offset + 1
+	end
+	if vim.o.laststatus == 3 then
+		height_offset = height_offset + 1
+	end
+  return height - height_offset
 end
 
 function M.resolve(max, value)
@@ -113,13 +120,17 @@ end
 --- @param opts ZenOptions
 function M.layout(opts)
   local width = M.resolve(vim.o.columns, opts.window.width)
-  local height = M.resolve(M.height(), opts.window.height)
+  local height = M.resolve(M.height(opts), opts.window.height)
+	local height_offset = 0
+	if opts.plugins.tabline and opts.plugins.tabline.enabled then
+		height_offset = 1
+	end
 
   return {
     width = M.round(width),
-    height = M.round(height),
+    height = M.round(height) - height_offset,
     col = M.round((vim.o.columns - width) / 2),
-    row = M.round((M.height() - height) / 2),
+    row = M.round((M.height(opts) - height) / 2) + height_offset,
   }
 end
 
@@ -129,12 +140,12 @@ function M.fix_layout(win_resized)
     if win_resized then
       local l = M.layout(M.opts)
       vim.api.nvim_win_set_config(M.win, { width = l.width, height = l.height })
-      vim.api.nvim_win_set_config(M.bg_win, { width = vim.o.columns, height = M.height() })
+      vim.api.nvim_win_set_config(M.bg_win, { width = vim.o.columns, height = M.height(M.opts) })
     end
     local height = vim.api.nvim_win_get_height(M.win)
     local width = vim.api.nvim_win_get_width(M.win)
     local col = M.round((vim.o.columns - width) / 2)
-    local row = M.round((M.height() - height) / 2)
+    local row = M.round((M.height(M.opts) - height) / 2)
     local cfg = vim.api.nvim_win_get_config(M.win)
     -- HACK: col is an array?
     local wcol = type(cfg.col) == "number" and cfg.col or cfg.col[false]
@@ -157,12 +168,17 @@ function M.create(opts)
 
   M.bg_buf = vim.api.nvim_create_buf(false, true)
   local ok
+	local row = 0
+	if opts.plugins.tabline and opts.plugins.tabline.enabled then
+		row = 1
+	end
+
   ok, M.bg_win = pcall(vim.api.nvim_open_win, M.bg_buf, false, {
     relative = "editor",
     width = vim.o.columns,
-    height = M.height(),
+    height = M.height(opts),
     focusable = false,
-    row = 0,
+    row = row,
     col = 0,
     style = "minimal",
     zindex = opts.zindex - 10,

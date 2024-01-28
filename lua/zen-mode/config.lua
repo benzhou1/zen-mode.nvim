@@ -35,6 +35,7 @@ local defaults = {
     gitsigns = { enabled = false }, -- disables git signs
     tmux = { enabled = false }, -- disables the tmux statusline
     diagnostics = { enabled = false }, -- disables diagnostics
+		tabline = { enabled = false }, -- disables tabline
     -- this will change the font size on kitty when in zen mode
     -- to make this work, you need to set the following kitty options:
     -- - allow_remote_control socket-only
@@ -51,7 +52,7 @@ local defaults = {
       font = "14", -- font size
     },
     -- this will change the font size on wezterm when in zen mode
-    -- See alse also the Plugins/Wezterm section in this projects README
+    -- See also also the Plugins/Wezterm section in this projects README
     wezterm = {
       enabled = false,
       -- can be either an absolute font size or the number of incremental steps
