@@ -20,7 +20,7 @@ elif read -r -t 2 STDIN; then
 else
   echo "No file provided for opening" && exit 1
 fi
-FPATH=$(printf '%s' "$FPATH" | tr -d '[:space:]')
+FPATH=$(printf '%s' "$FPATH")
 
 # Parse line:col
 readarray -td: a < <(printf %s "$FPATH")
@@ -41,7 +41,7 @@ SOCK_COUNT=${#LISTEN_SOCKS[@]}
 SOCK_INDEX=1
 for sock in "${LISTEN_SOCKS[@]}"; do
   # extract pid from socket path
-  server_pid=$(echo "$sock" | cut -d'.' -f2)
+  server_pid=$(echo "$sock" | rev | cut -d'.' -f2 | rev)
   # process id of server's parent, which is the nvim client
   client_pid=$(ps -o ppid= -p "$server_pid" | tr -d ' ')
   # process id of tmux pane that contains the nvim client
@@ -75,9 +75,10 @@ done
 
 if [[ ${MENU_ARGS[0]} ]]; then
   # open menu for selection
-  tmux menu -s "$MENU_STYLE" -H "$MENU_SELECTED_STYLE" -T "tmux-open-nvim: $FILE" "${MENU_ARGS[@]}"
+  tmux menu -T "tmux-open-nvim: $FILE" "${MENU_ARGS[@]}"
 else
   # No remote nvim, so just open in current pane
   tmux send-keys "nvim -c \"call cursor($LINE, $COLUMN)\" $FILE"
   tmux send-keys "C-m"
 fi
+
